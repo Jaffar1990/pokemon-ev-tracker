@@ -1,0 +1,60 @@
+.app-footer {
+  display: flex;
+  align-items: center;
+  margin-top: 20px;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.footer-data-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.footer-data-button {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 11px;
+  color: #1e293b;
+  cursor: pointer;
+}
+
+.import-file-input {
+  display: none;
+}
+
+.rules-row,
+.language-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rules-label,
+.language-label {
+  font-size: 11px;
+  font-weight: bold;
+  color: #475569;
+}
+
+.rules-select,
+.language-select {
+  padding: 2px 6px;
+  font-size: 11px;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+@media (max-width: 640px) {
+  .app-footer {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+}
