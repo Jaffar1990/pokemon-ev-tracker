@@ -47,7 +47,8 @@ const translations = {
       nonePowerItem: 'Nessuno',
       edit: 'Modifica EV',
       cancel: 'Annulla modifiche',
-      save: 'Salva EV'
+      save: 'Salva EV',
+      drag: 'Trascina per riordinare'
     },
     powerItems: {
       weight: 'Vigorpeso (HP)',
@@ -130,7 +131,8 @@ const translations = {
       nonePowerItem: 'None',
       edit: 'Edit EVs',
       cancel: 'Cancel changes',
-      save: 'Save EVs'
+      save: 'Save EVs',
+      drag: 'Drag to reorder'
     },
     powerItems: {
       weight: 'Power Weight (HP)',

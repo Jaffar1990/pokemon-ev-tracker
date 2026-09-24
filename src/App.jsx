@@ -1,8 +1,10 @@
 import { useState, useRef, useCallback } from 'react';
+import { DndContext, PointerSensor, TouchSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
+import { SortableContext, arrayMove, rectSortingStrategy } from '@dnd-kit/sortable';
 import { usePokemon, usePokemonList } from './hooks/usePokemon';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { usePokemonSuggestions } from './hooks/usePokemonSuggestions';
-import { PokemonCard } from './components/PokemonCard';
+import { SortablePokemonCard } from './components/SortablePokemonCard';
 import { AppHeader } from './components/AppHeader';
 import { AppFooter } from './components/AppFooter';
 import { addEvs } from './utils/evCalculations';
@@ -41,6 +43,10 @@ export default function App() {
 
   // Lista dei nomi di tutti i pokemon per la ricerca con debounce
   const allPokemonNames = usePokemonList();
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 0, tolerance: 5 } })
+  );
 
   const { data: wildPokemon, loading: wildLoading, error: wildError } = usePokemon(targetQuery);
   const wildSuggestions = usePokemonSuggestions(searchInput, allPokemonNames);
@@ -162,6 +168,19 @@ export default function App() {
       }
     }, [setRecentWilds, setTeam, t.app.importError, t.app.importSuccess, t.app.invalidFile]);
 
+  const handleDragEnd = useCallback(({ active, over }) => {
+    if (!over || active.id === over.id) return;
+
+    setPreviousTeam(team);
+    setTeam(currentTeam => {
+      const oldIndex = currentTeam.findIndex(member => member.instanceId === active.id);
+      const newIndex = currentTeam.findIndex(member => member.instanceId === over.id);
+      return oldIndex === -1 || newIndex === -1
+        ? currentTeam
+        : arrayMove(currentTeam, oldIndex, newIndex);
+    });
+  }, [setTeam, team]);
+
   return (
       <div className="app-root">
 
@@ -189,19 +208,23 @@ export default function App() {
         {team.length === 0 ? (
           <p className="empty-team-msg">{t.app.emptyTeam}</p>
         ) : (
-          <div className="team-grid">
-            {team.map(member => (
-              <PokemonCard
-                key={member.instanceId}
-                pokemon={member}
-                generation={generation}
-                language={language}
-                onUpdate={handleUpdateMember}
-                onDelete={handleDeleteMember}
-                onSaveStateForUndo={handleSaveStateForUndo} // Passiamo la callback per l'Undo
-              />
-            ))}
-          </div>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={team.map(member => member.instanceId)} strategy={rectSortingStrategy}>
+              <div className="team-grid">
+                {team.map(member => (
+                  <SortablePokemonCard
+                    key={member.instanceId}
+                    pokemon={member}
+                    generation={generation}
+                    language={language}
+                    onUpdate={handleUpdateMember}
+                    onDelete={handleDeleteMember}
+                    onSaveStateForUndo={handleSaveStateForUndo}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
         )}
 
         <AppFooter

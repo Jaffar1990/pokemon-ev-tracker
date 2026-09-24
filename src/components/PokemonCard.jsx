@@ -3,7 +3,7 @@ import { calculateTotalEvs, sanitizeManualEvs, EV_LIMITS, POWER_ITEMS, VITAMINS,
 import { getTranslations } from '../i18n/translations';
 import './PokemonCard.css';
 
-export const PokemonCard = memo(function PokemonCard({ pokemon, onUpdate, onDelete, onSaveStateForUndo, generation = 8, language = 'it' }) {
+export const PokemonCard = memo(function PokemonCard({ pokemon, onUpdate, onDelete, onSaveStateForUndo, generation = 8, language = 'it', dragHandleRef, dragHandleProps }) {
   const [isEditing, setIsEditing] = useState(false);
   const [tempEvs, setTempEvs] = useState({ ...pokemon.evs });
   const [isEvolving, setIsEvolving] = useState(false);
@@ -161,6 +161,20 @@ export const PokemonCard = memo(function PokemonCard({ pokemon, onUpdate, onDele
           </div>
 
           <div className="pokemon-card-actions">
+            <button
+              type="button"
+              ref={dragHandleRef}
+              className="pokemon-card-drag-handle"
+              title={t.card.drag}
+              aria-label={t.card.drag}
+              {...dragHandleProps}
+              onContextMenu={(event) => event.preventDefault()}
+              onTouchStart={(event) => event.preventDefault()}
+              onTouchMove={(event) => event.preventDefault()}
+              onPointerMove={(event) => event.preventDefault()}
+            >
+              ⠿
+            </button>
             {canDevolve && (
               <button className="pokemon-card-evolution pokemon-card-evolution-previous" disabled={isEvolving} onClick={() => handleEvolutionChange(chain[currentEvoIndex - 1])}>◀</button>
             )}

@@ -37,6 +37,7 @@ npm run preview
 4. Press **Defeat** to apply those EVs to every active team member.
 5. Use the **Undo** button to restore the team to the state before the last EV increase.
 6. Use the recent Pokemon strip to select one of the last wild Pokemon again.
+7. Drag a team card by its handle to change the team order. The order is saved automatically.
 
 Only active team members receive EVs. The checkbox in each card controls whether that Pokemon participates in battles.
 
@@ -138,6 +139,7 @@ npm run preview
 4. Premi **Sconfiggi** per assegnare quegli EV a ogni membro attivo della squadra.
 5. Usa **Annulla** per ripristinare la squadra allo stato precedente all'ultimo incremento.
 6. Usa la lista dei Pokemon recenti per selezionare nuovamente uno degli ultimi avversari.
+7. Trascina una card dalla maniglia per cambiare l’ordine della squadra. Il nuovo ordine viene salvato automaticamente.
 
 Ricevono EV solo i membri attivi. La checkbox presente in ogni card stabilisce se il Pokemon partecipa alle lotte.
 

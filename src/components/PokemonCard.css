@@ -63,10 +63,12 @@
 
 .pokemon-card-actions {
   gap: 2px;
+  touch-action: none;
 }
 
 .pokemon-card-evolution,
 .pokemon-card-delete,
+.pokemon-card-drag-handle,
 .pokemon-card-edit-button,
 .pokemon-card-save-button {
   border: none;
@@ -77,6 +79,25 @@
   border-radius: 3px;
   padding: 1px 4px;
   font-size: 10px;
+}
+
+.pokemon-card-drag-handle {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 3px;
+  padding: 1px 4px;
+  color: #64748b;
+  font-size: 12px;
+  cursor: grab;
+  touch-action: none !important;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pokemon-card-drag-handle:active {
+  cursor: grabbing;
 }
 
 .pokemon-card-evolution-previous {
@@ -323,6 +344,7 @@
 
   .pokemon-card-evolution,
   .pokemon-card-delete,
+  .pokemon-card-drag-handle,
   .pokemon-card-edit-button,
   .pokemon-card-cancel-button,
   .pokemon-card-save-button {
