@@ -78,46 +78,48 @@ export function AppHeader({
           )}
         </div>
 
-        {(wildLoading || wildError) && (
-          <div className={`wild-status${wildError ? ' is-error' : ''}`} role="status" aria-live="polite">
-            {wildError ? t.header.searchError : t.header.loading}
-          </div>
-        )}
+        <div className="wild-result-slot">
+          {(wildLoading || wildError) && (
+            <div className={`wild-status${wildError ? ' is-error' : ''}`} role="status" aria-live="polite">
+              {wildError ? t.header.searchError : t.header.loading}
+            </div>
+          )}
 
-        {wildPokemon && (
-          <div className="wild-info">
-            <img src={wildPokemon.sprite} alt={wildPokemon.name} className="wild-info-img" />
-            <div className="wild-info-content">
-              <strong className="wild-info-name">{wildPokemon.name}</strong>
-              <div className="wild-info-yields">
-                {wildPokemon.yields.map((y, i) => (
-                  <span key={i} className="wild-info-yield">
-                    {t.stats[y.stat]} +{y.amount}
-                  </span>
-                ))}
+          {wildPokemon && (
+            <div className="wild-info">
+              <img src={wildPokemon.sprite} alt={wildPokemon.name} className="wild-info-img" />
+              <div className="wild-info-content">
+                <strong className="wild-info-name">{wildPokemon.name}</strong>
+                <div className="wild-info-yields">
+                  {wildPokemon.yields.map((y, i) => (
+                    <span key={i} className="wild-info-yield">
+                      {t.stats[y.stat]} +{y.amount}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="wild-info-actions">
+                <button
+                  onClick={onDefeatWildPokemon}
+                  disabled={team.length === 0}
+                  className={`wild-action-btn${team.length === 0 ? ' disabled' : ''}`}
+                >
+                  ⚔️ {t.header.defeat}
+                </button>
+
+                <button
+                  onClick={onUndo}
+                  disabled={!previousTeam}
+                  className={`wild-action-btn undo${!previousTeam ? ' disabled' : ''}`}
+                  title={previousTeam ? t.header.undoTitle : t.header.noUndoTitle}
+                >
+                  ↩️ {t.header.undo}
+                </button>
               </div>
             </div>
-
-            <div className="wild-info-actions">
-              <button
-                onClick={onDefeatWildPokemon}
-                disabled={team.length === 0}
-                className={`wild-action-btn${team.length === 0 ? ' disabled' : ''}`}
-              >
-                ⚔️ {t.header.defeat}
-              </button>
-
-              <button
-                onClick={onUndo}
-                disabled={!previousTeam}
-                className={`wild-action-btn undo${!previousTeam ? ' disabled' : ''}`}
-                title={previousTeam ? t.header.undoTitle : t.header.noUndoTitle}
-              >
-                ↩️ {t.header.undo}
-              </button>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <div className="recent-wilds">
