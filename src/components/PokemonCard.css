@@ -314,3 +314,47 @@
   padding: 0 4px;
   font-size: 9px;
 }
+
+@media (max-width: 600px) {
+  .pokemon-card-active-toggle {
+    width: 22px;
+    height: 22px;
+  }
+
+  .pokemon-card-evolution,
+  .pokemon-card-delete,
+  .pokemon-card-edit-button,
+  .pokemon-card-cancel-button,
+  .pokemon-card-save-button {
+    min-width: 36px;
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
+  }
+
+  .pokemon-card-tools-toggle-button {
+    min-height: 38px;
+    touch-action: manipulation;
+  }
+
+  .pokemon-card-item-button {
+    min-height: 40px;
+    touch-action: manipulation;
+  }
+
+  .pokemon-card-held-item {
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .pokemon-card-power-select {
+    min-height: 36px;
+  }
+
+  .pokemon-card-edit-input {
+    min-height: 32px;
+  }
+}

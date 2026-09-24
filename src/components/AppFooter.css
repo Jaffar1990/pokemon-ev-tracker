@@ -53,8 +53,50 @@
 
 @media (max-width: 640px) {
   .app-footer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+  }
+
+  .rules-row {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  .rules-select {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .footer-data-actions,
+  .language-row {
+    min-width: 0;
+  }
+
+  .footer-data-actions {
+    justify-content: flex-start;
+  }
+
+  .language-row {
+    justify-content: flex-end;
+  }
+
+  .footer-data-button,
+  .language-select,
+  .rules-select {
+    min-height: 36px;
+  }
+}
+
+@media (max-width: 380px) {
+  .app-footer {
+    display: flex;
     align-items: stretch;
     flex-direction: column;
-    gap: 10px;
+  }
+
+  .language-row {
+    justify-content: flex-start;
   }
 }

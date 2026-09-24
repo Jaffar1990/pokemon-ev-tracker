@@ -12,6 +12,8 @@ export function AppHeader({
   setSearchInput,
   wildSuggestions,
   setTargetQuery,
+  wildLoading,
+  wildError,
   wildPokemon,
   onDefeatWildPokemon,
   previousTeam,
@@ -75,6 +77,12 @@ export function AppHeader({
             </ul>
           )}
         </div>
+
+        {(wildLoading || wildError) && (
+          <div className={`wild-status${wildError ? ' is-error' : ''}`} role="status" aria-live="polite">
+            {wildError ? t.header.searchError : t.header.loading}
+          </div>
+        )}
 
         {wildPokemon && (
           <div className="wild-info">

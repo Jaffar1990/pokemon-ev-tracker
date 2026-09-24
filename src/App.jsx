@@ -42,7 +42,7 @@ export default function App() {
   // Lista dei nomi di tutti i pokemon per la ricerca con debounce
   const allPokemonNames = usePokemonList();
 
-  const { data: wildPokemon } = usePokemon(targetQuery);
+  const { data: wildPokemon, loading: wildLoading, error: wildError } = usePokemon(targetQuery);
   const wildSuggestions = usePokemonSuggestions(searchInput, allPokemonNames);
   const teamSuggestions = usePokemonSuggestions(teamSearchInput, allPokemonNames);
 
@@ -176,6 +176,8 @@ export default function App() {
           setSearchInput={setSearchInput}
           wildSuggestions={wildSuggestions}
           setTargetQuery={setTargetQuery}
+          wildLoading={wildLoading}
+          wildError={wildError}
           wildPokemon={wildPokemon}
           onDefeatWildPokemon={handleDefeatWildPokemon}
           previousTeam={previousTeam}

@@ -120,6 +120,16 @@
   flex: 1;
   min-width: 0;
 }
+.wild-status {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.wild-status.is-error {
+  color: #dc2626;
+}
+
 .wild-info-content {
   min-width: 0;
   flex: 1;
@@ -222,4 +232,57 @@
   width: 26px;
   height: 26px;
   display: block;
+}
+
+@media (max-width: 900px) {
+  .header-section {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .wild-section {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    border-left: none;
+    border-right: none;
+    border-top: 1px solid #cbd5e1;
+    border-bottom: 1px solid #cbd5e1;
+    padding: 12px 0;
+  }
+
+  .wild-search-box {
+    width: 100%;
+  }
+
+  .wild-info {
+    width: 100%;
+  }
+
+  .recent-wilds-list {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-section {
+    padding: 10px;
+  }
+
+  .add-team-header {
+    align-items: flex-start;
+  }
+
+  .wild-info {
+    gap: 6px;
+  }
+
+  .wild-info-actions {
+    gap: 3px;
+  }
+
+  .wild-action-btn {
+    padding-inline: 6px;
+    font-size: 11px;
+  }
 }
