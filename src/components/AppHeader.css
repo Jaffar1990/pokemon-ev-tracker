@@ -269,6 +269,11 @@
     padding: 10px;
   }
 
+  .add-team-input,
+  .wild-search-input {
+    font-size: 16px;
+  }
+
   .add-team-header {
     align-items: flex-start;
   }

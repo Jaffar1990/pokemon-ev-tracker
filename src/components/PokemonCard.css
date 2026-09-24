@@ -356,5 +356,6 @@
 
   .pokemon-card-edit-input {
     min-height: 32px;
+    font-size: 16px;
   }
 }
