@@ -3,7 +3,17 @@ export const EV_LIMITS = {
   MAX_SINGLE: 252
 };
 
-// Vigorstrumenti (Power Items) e le stat corrispondenti (+8 EV in Gen 6+)
+export function getEvRules(generation = 8) {
+  return {
+    maxTotal: EV_LIMITS.MAX_TOTAL,
+    maxSingle: generation <= 5 ? 255 : EV_LIMITS.MAX_SINGLE,
+    maxVitaminCap: generation <= 7 ? 100 : null,
+    hasFeathers: generation === 5,
+    hasPowerItems: generation >= 4,
+    powerItemBonus: generation <= 3 ? 0 : generation <= 5 ? 4 : 8
+  };
+}
+
 export const POWER_ITEMS = {
   none: { stat: null, bonus: 0 },
   weight: { stat: 'hp', bonus: 8 },
@@ -23,6 +33,8 @@ export const VITAMINS = [
   { name: 'speed', stat: 'speed' }
 ];
 
+export const FEATHERS = VITAMINS;
+
 export const BERRIES = [
   { name: 'hp', stat: 'hp' },
   { name: 'attack', stat: 'attack' },
@@ -37,7 +49,8 @@ export function calculateTotalEvs(currentEvs) {
 }
 
 export function addEvs(currentEvs, yieldsToAdd, options = {}) {
-  const { multiplier = 1, powerItemKey = 'none' } = options;
+  const { multiplier = 1, powerItemKey = 'none', generation = 8 } = options;
+  const { maxSingle, maxTotal, powerItemBonus } = getEvRules(generation);
   const newEvs = { ...currentEvs };
   let currentTotal = calculateTotalEvs(currentEvs);
 
@@ -47,19 +60,19 @@ export function addEvs(currentEvs, yieldsToAdd, options = {}) {
     evsGained[stat] = (evsGained[stat] || 0) + amount;
   });
 
-  // Aggiungi il bonus fisso del Vigorstrumento (+8 alla stat specifica)
+  // Applica il bonus del Vigorstrumento, se disponibile in questa generazione.
   const powerItem = POWER_ITEMS[powerItemKey];
-  if (powerItem && powerItem.stat) {
-    evsGained[powerItem.stat] = (evsGained[powerItem.stat] || 0) + powerItem.bonus;
+  if (powerItem && powerItem.stat && powerItemBonus > 0) {
+    evsGained[powerItem.stat] = (evsGained[powerItem.stat] || 0) + powerItemBonus;
   }
 
-  // Applica i moltiplicatori (Crescicappa / Pokérus) e rispetta i limiti (252 e 510)
+  // Applica i moltiplicatori e i limiti della generazione selezionata.
   Object.entries(evsGained).forEach(([stat, rawAmount]) => {
     const totalPointsToAdd = rawAmount * multiplier;
     const currentStatVal = Number(newEvs[stat]) || 0;
 
-    const allowedForStat = Math.min(totalPointsToAdd, EV_LIMITS.MAX_SINGLE - currentStatVal);
-    const allowedForTotal = Math.min(allowedForStat, EV_LIMITS.MAX_TOTAL - currentTotal);
+    const allowedForStat = Math.min(totalPointsToAdd, maxSingle - currentStatVal);
+    const allowedForTotal = Math.min(allowedForStat, maxTotal - currentTotal);
 
     if (allowedForTotal > 0) {
       newEvs[stat] = currentStatVal + allowedForTotal;
@@ -71,18 +84,18 @@ export function addEvs(currentEvs, yieldsToAdd, options = {}) {
 }
 
 // Funzione per sanificare le modifiche manuali
-export function sanitizeManualEvs(newEvs) {
+export function sanitizeManualEvs(newEvs, generation = 8) {
+  const { maxSingle, maxTotal } = getEvRules(generation);
   const sanitized = {};
   let total = 0;
 
   Object.entries(newEvs).forEach(([stat, rawVal]) => {
     let val = parseInt(rawVal, 10) || 0;
     if (val < 0) val = 0;
-    if (val > EV_LIMITS.MAX_SINGLE) val = EV_LIMITS.MAX_SINGLE;
+    if (val > maxSingle) val = maxSingle;
 
-    // Se aggiungendo questo valore si supera il cap totale di 510, riducilo
-    if (total + val > EV_LIMITS.MAX_TOTAL) {
-      val = EV_LIMITS.MAX_TOTAL - total;
+    if (total + val > maxTotal) {
+      val = maxTotal - total;
     }
 
     sanitized[stat] = val;
@@ -92,7 +105,8 @@ export function sanitizeManualEvs(newEvs) {
   return sanitized;
 }
 
-export function applyVitamin(currentEvs, stat, maxVitaminCap = null) {
+export function applyVitamin(currentEvs, stat, maxVitaminCap = null, generation = 8) {
+  const { maxSingle, maxTotal } = getEvRules(generation);
   const currentStatEvs = Number(currentEvs[stat]) || 0;
   const currentTotal = calculateTotalEvs(currentEvs);
 
@@ -103,12 +117,12 @@ export function applyVitamin(currentEvs, stat, maxVitaminCap = null) {
 
   // Limite massimo per la stat
   const maxStatLimit = maxVitaminCap !== null
-    ? Math.min(maxVitaminCap, EV_LIMITS.MAX_SINGLE)
-    : EV_LIMITS.MAX_SINGLE;
+    ? Math.min(maxVitaminCap, maxSingle)
+    : maxSingle;
 
   const maxAddByCap = maxStatLimit - currentStatEvs;
-  const maxAddByTotal = EV_LIMITS.MAX_TOTAL - currentTotal;
-  const maxAddByStat = EV_LIMITS.MAX_SINGLE - currentStatEvs;
+  const maxAddByTotal = maxTotal - currentTotal;
+  const maxAddByStat = maxSingle - currentStatEvs;
 
   // Calcola la quantità effettiva da aggiungere (max 10)
   const amountToAdd = Math.min(10, maxAddByCap, maxAddByTotal, maxAddByStat);
@@ -121,13 +135,29 @@ export function applyVitamin(currentEvs, stat, maxVitaminCap = null) {
   };
 }
 
-export function applyBerry(currentEvs, stat) {
+export function applyFeather(currentEvs, stat, generation = 5) {
+  const { maxSingle, maxTotal, hasFeathers } = getEvRules(generation);
+  const currentStatEvs = Number(currentEvs[stat]) || 0;
+  const currentTotal = calculateTotalEvs(currentEvs);
+
+  if (!hasFeathers || currentStatEvs >= maxSingle || currentTotal >= maxTotal) {
+    return currentEvs;
+  }
+
+  return {
+    ...currentEvs,
+    [stat]: currentStatEvs + 1
+  };
+}
+
+export function applyBerry(currentEvs, stat, generation = 8) {
   const currentStatEvs = Number(currentEvs[stat]) || 0;
 
   if (currentStatEvs <= 0) return currentEvs;
 
-  // Sottrae 10 EV, portando la statistica al massimo a 0
-  const newEvs = Math.max(0, currentStatEvs - 10);
+  const newEvs = generation === 4 && currentStatEvs > 110
+    ? 100
+    : Math.max(0, currentStatEvs - 10);
 
   return {
     ...currentEvs,

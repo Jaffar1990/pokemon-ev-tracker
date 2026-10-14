@@ -7,13 +7,41 @@ import { usePokemonSuggestions } from './hooks/usePokemonSuggestions';
 import { SortablePokemonCard } from './components/SortablePokemonCard';
 import { AppHeader } from './components/AppHeader';
 import { AppFooter } from './components/AppFooter';
+import { TrackerManager } from './components/TrackerManager';
 import { addEvs } from './utils/evCalculations';
 import { fetchPokemonDetails } from './utils/pokemonApi';
+import { DEFAULT_VERSION_GROUP, getGenerationForVersionGroup, getVersionGroupForGeneration, migrateStoredTrackings, normalizeVersionGroup } from './utils/gameVersions';
 import { getTranslations } from './i18n/translations';
 
 import './App.css'
 
+const EMPTY_LIST = [];
+
 export default function App() {
+  const [trackings, setTrackings] = useLocalStorage('poke_app_trackings', () => {
+    const legacyTeam = JSON.parse(localStorage.getItem('poke_app_team') || '[]');
+    if (!Array.isArray(legacyTeam) || legacyTeam.length === 0) return [];
+
+    return [{
+      id: 'legacy-tracking',
+      name: 'Il mio primo tracking',
+      versionGroup: getVersionGroupForGeneration(Number(localStorage.getItem('poke_app_generation') || 8)),
+      team: legacyTeam,
+      recentWilds: JSON.parse(localStorage.getItem('poke_app_recent_wilds') || '[]')
+    }];
+  }, migrateStoredTrackings);
+  const [activeTrackingId, setActiveTrackingId] = useLocalStorage('poke_app_active_tracking', null);
+  const activeTracking = trackings.find(tracking => tracking.id === activeTrackingId);
+
+  const updateActiveTracking = useCallback((updater) => {
+    if (!activeTrackingId) return;
+    setTrackings(current => current.map(tracking => {
+      if (tracking.id !== activeTrackingId) return tracking;
+      const changes = typeof updater === 'function' ? updater(tracking) : updater;
+      return { ...tracking, ...changes };
+    }));
+  }, [activeTrackingId, setTrackings]);
+
   // Ricerca selvatico
   const [targetQuery, setTargetQuery] = useState(''); // Pokémon selvatico affrontato
   const [searchInput, setSearchInput] = useState('');
@@ -21,21 +49,31 @@ export default function App() {
   // Ricerca per aggiungere un Pokémon al Team
   const [teamSearchInput, setTeamSearchInput] = useState('');
 
-  // Lista del Team di Pokémon con caricamento iniziale dallo Storage Locale
-  const [team, setTeam] = useLocalStorage('poke_app_team', []);
+  const team = activeTracking?.team || EMPTY_LIST;
+  const setTeam = useCallback((updater) => {
+    updateActiveTracking(tracking => ({
+      team: typeof updater === 'function' ? updater(tracking.team) : updater
+    }));
+  }, [updateActiveTracking]);
 
   // Stato per salvare l'ultimo snapshot della squadra prima di un attacco
   const [previousTeam, setPreviousTeam] = useState(null);
 
   // Lista degli ultimi Pokémon selvatici sconfitti (max 10) con caricamento iniziale dallo Storage Locale
-  const [recentWilds, setRecentWilds] = useLocalStorage('poke_app_recent_wilds', []);
+  const recentWilds = activeTracking?.recentWilds || EMPTY_LIST;
+  const setRecentWilds = useCallback((updater) => {
+    updateActiveTracking(tracking => ({
+      recentWilds: typeof updater === 'function' ? updater(tracking.recentWilds) : updater
+    }));
+  }, [updateActiveTracking]);
 
-  const handleSaveStateForUndo = useCallback(() => {
-    setPreviousTeam(team);
-  }, [team]);
+  const handleSaveStateForUndo = () => setPreviousTeam(team);
 
-  // Stato per la Generazione selezionata (default 8)
-  const [generation, setGeneration] = useLocalStorage('poke_app_generation', 8);
+  const versionGroup = normalizeVersionGroup(activeTracking?.versionGroup);
+  const generation = getGenerationForVersionGroup(versionGroup);
+  const setVersionGroup = useCallback((nextVersionGroup) => {
+    updateActiveTracking({ versionGroup: normalizeVersionGroup(nextVersionGroup) });
+  }, [updateActiveTracking]);
 
   const [language, setLanguage] = useLocalStorage('poke_app_language', 'it');
   const fileInputRef = useRef(null);
@@ -48,9 +86,28 @@ export default function App() {
     useSensor(TouchSensor, { activationConstraint: { delay: 0, tolerance: 5 } })
   );
 
-  const { data: wildPokemon, loading: wildLoading, error: wildError } = usePokemon(targetQuery);
+  const { data: wildPokemon, loading: wildLoading, error: wildError } = usePokemon(targetQuery, versionGroup);
   const wildSuggestions = usePokemonSuggestions(searchInput, allPokemonNames);
   const teamSuggestions = usePokemonSuggestions(teamSearchInput, allPokemonNames);
+
+  const handleCreateTracking = useCallback((name) => {
+    const id = `tracking-${Date.now()}`;
+    setTrackings(current => [...current, { id, name, versionGroup: DEFAULT_VERSION_GROUP, team: [], recentWilds: [] }]);
+    setActiveTrackingId(id);
+    setPreviousTeam(null);
+  }, [setActiveTrackingId, setPreviousTeam, setTrackings]);
+
+  const handleOpenTracking = useCallback((id) => {
+    setActiveTrackingId(id);
+    setPreviousTeam(null);
+    setTargetQuery('');
+    setSearchInput('');
+  }, [setActiveTrackingId, setPreviousTeam, setSearchInput, setTargetQuery]);
+
+  const handleCloseTracking = useCallback(() => {
+    setActiveTrackingId(null);
+    setPreviousTeam(null);
+  }, [setActiveTrackingId, setPreviousTeam]);
 
   // Aggiunge un Pokémon al Team
   const handleAddTeamMember = useCallback(async (name) => {
@@ -75,7 +132,7 @@ export default function App() {
     } catch (err) {
       console.error('Failed to add Pokemon:', err);
     }
-  }, [setTeam]);
+  }, [setTeam, setTeamSearchInput]);
 
   const handleUpdateMember = useCallback((updated) => {
     setTeam(prev => prev.map(p => p.instanceId === updated.instanceId ? updated : p));
@@ -100,7 +157,8 @@ export default function App() {
 
       const updatedEvs = addEvs(member.evs, wildPokemon.yields, {
         multiplier,
-        powerItemKey: member.powerItemKey || 'none'
+        powerItemKey: member.powerItemKey || 'none',
+        generation
       });
       return { ...member, evs: updatedEvs };
     }));
@@ -113,7 +171,7 @@ export default function App() {
         ...filtered
       ].slice(0, 10);
     });
-  }, [setRecentWilds, setTeam, team, wildPokemon]);
+  }, [generation, setPreviousTeam, setRecentWilds, setTeam, team, wildPokemon]);
 
   // Funzione di Undo per ripristinare la squadra a prima dell'ultima vittoria
   const handleUndo = useCallback(() => {
@@ -121,13 +179,14 @@ export default function App() {
       setTeam(previousTeam);
       setPreviousTeam(null); // Resetta l'undo fino alla prossima azione
     }
-  }, [previousTeam, setTeam]);
+  }, [previousTeam, setPreviousTeam, setTeam]);
 
   // Funzione per Esportare i Dati in JSON
     const handleExportData = useCallback(() => {
       const dataToExport = {
-        version: 1,
+        version: 2,
         exportedAt: new Date().toISOString(),
+        versionGroup,
         team,
         recentWilds
       };
@@ -140,7 +199,7 @@ export default function App() {
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
-    }, [recentWilds, team]);
+    }, [recentWilds, team, versionGroup]);
 
     // Funzione per Importare i Dati da JSON
     const handleImportData = useCallback((e) => {
@@ -155,6 +214,10 @@ export default function App() {
               if (Array.isArray(parsed.recentWilds)) {
                 setRecentWilds(parsed.recentWilds);
               }
+              const fallbackVersionGroup = Number.isInteger(parsed.generation) && parsed.generation >= 3 && parsed.generation <= 9
+                ? getVersionGroupForGeneration(parsed.generation)
+                : versionGroup;
+              setVersionGroup(normalizeVersionGroup(parsed.versionGroup, fallbackVersionGroup));
               setPreviousTeam(null);
               alert(t.app.importSuccess);
             } else {
@@ -166,7 +229,7 @@ export default function App() {
           }
         };
       }
-    }, [setRecentWilds, setTeam, t.app.importError, t.app.importSuccess, t.app.invalidFile]);
+    }, [setPreviousTeam, setRecentWilds, setTeam, setVersionGroup, t.app.importError, t.app.importSuccess, t.app.invalidFile, versionGroup]);
 
   const handleDragEnd = useCallback(({ active, over }) => {
     if (!over || active.id === over.id) return;
@@ -179,12 +242,29 @@ export default function App() {
         ? currentTeam
         : arrayMove(currentTeam, oldIndex, newIndex);
     });
-  }, [setTeam, team]);
+  }, [setPreviousTeam, setTeam, team]);
+
+  if (!activeTracking) {
+    return (
+      <div className="app-root manager-root">
+        <TrackerManager
+          trackings={trackings}
+          setTrackings={setTrackings}
+          language={language}
+          onCreate={handleCreateTracking}
+          onOpen={handleOpenTracking}
+        />
+        <AppFooter language={language} setLanguage={setLanguage} />
+      </div>
+    );
+  }
 
   return (
       <div className="app-root">
 
         <AppHeader
+          trackingName={activeTracking.name}
+          onBack={handleCloseTracking}
           team={team}
           language={language}
           teamSearchInput={teamSearchInput}
@@ -228,8 +308,8 @@ export default function App() {
         )}
 
         <AppFooter
-          generation={generation}
-          setGeneration={setGeneration}
+          versionGroup={versionGroup}
+          setVersionGroup={setVersionGroup}
           language={language}
           setLanguage={setLanguage}
           onExportData={handleExportData}

@@ -1,13 +1,26 @@
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
+  --page-bg: #eef3f6;
+  --surface: #fff;
+  --surface-muted: #f5f7f9;
+  --text-primary: #25313a;
+  --text-secondary: #65737e;
+  --border: #d7e0e5;
+  --pokemon-red: #d62839;
+  --pokemon-red-deep: #b61f2d;
+  --pokemon-red-soft: #fdecef;
+  --pokemon-yellow: #f2c94c;
+  --pokemon-yellow-soft: #fff7d8;
+  --pokemon-yellow-ink: #66500d;
+  --pokemon-blue: #2e6f9e;
+  --pokemon-blue-soft: #eaf2f8;
+  --text: var(--text-secondary);
+  --text-h: var(--text-primary);
+  --bg: var(--page-bg);
+  --code-bg: var(--surface-muted);
+  --accent: var(--pokemon-red);
+  --accent-bg: var(--pokemon-red-soft);
+  --accent-border: rgba(214, 40, 57, 0.45);
+  --social-bg: var(--surface-muted);
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 
@@ -17,7 +30,7 @@
 
   font: 18px/145% var(--sans);
   letter-spacing: 0.18px;
-  color-scheme: light dark;
+  color-scheme: light;
   color: var(--text);
   background: var(--bg);
   font-synthesis: none;
@@ -30,24 +43,14 @@
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
+.pokemon-wordmark {
+  color: #ffcb05;
+  font-family: 'Lilita One', system-ui, sans-serif;
+  font-weight: 400;
+  letter-spacing: 0;
+  -webkit-text-stroke: 0.8px #2456a6;
+  paint-order: stroke fill;
+  text-shadow: 1px 2px 0 #2456a6;
 }
 
 body {

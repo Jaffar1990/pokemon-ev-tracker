@@ -1,9 +1,10 @@
 import { getTranslations } from '../i18n/translations';
+import { GAME_VERSIONS, normalizeVersionGroup } from '../utils/gameVersions';
 import './AppFooter.css';
 
 export function AppFooter({
-  generation,
-  setGeneration,
+  versionGroup,
+  setVersionGroup,
   language,
   setLanguage,
   onExportData,
@@ -14,43 +15,49 @@ export function AppFooter({
 
   return (
     <div className="app-footer">
-      <div className="rules-row">
-        <label className="rules-label">
-          {t.app.rules}
-        </label>
-        <select
-          value={generation}
-          onChange={(e) => setGeneration(Number(e.target.value))}
-          className="rules-select"
-        >
-          <option value={7}>{t.app.generation7}</option>
-          <option value={8}>{t.app.generation8}</option>
-        </select>
-      </div>
+      {versionGroup !== undefined && (
+        <div className="rules-row">
+          <label className="rules-label">
+            {t.app.game}
+          </label>
+          <select
+            value={normalizeVersionGroup(versionGroup)}
+            onChange={(e) => setVersionGroup(e.target.value)}
+            className="rules-select"
+            aria-label={t.app.game}
+          >
+            {GAME_VERSIONS.map(game => (
+              <option key={game.id} value={game.id}>{game.name[language] || game.name.it}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
-      <div className="footer-data-actions">
-        <button
-          onClick={onExportData}
-          title={t.header.exportTitle}
-          className="footer-data-button"
-        >
-          💾 {t.header.export}
-        </button>
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          title={t.header.importTitle}
-          className="footer-data-button"
-        >
-          📂 {t.header.import}
-        </button>
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={onImportData}
-          accept=".json"
-          className="import-file-input"
-        />
-      </div>
+      {onExportData && (
+        <div className="footer-data-actions">
+          <button
+            onClick={onExportData}
+            title={t.header.exportTitle}
+            className="footer-data-button"
+          >
+            💾 {t.header.export}
+          </button>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            title={t.header.importTitle}
+            className="footer-data-button"
+          >
+            📂 {t.header.import}
+          </button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={onImportData}
+            accept=".json"
+            className="import-file-input"
+          />
+        </div>
+      )}
 
       <div className="language-row">
         <label className="language-label" htmlFor="language-select">

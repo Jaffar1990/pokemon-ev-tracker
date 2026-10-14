@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { fetchPokemonDetails } from '../utils/pokemonApi';
+import { getEffortYields } from '../utils/evYields';
 
 // Hook per recuperare tutti i nomi (per il suggerimento autocomplete)
 export function usePokemonList() {
@@ -36,10 +37,9 @@ export function usePokemonList() {
   return list;
 }
 
-export function usePokemon(pokemonNameOrId) {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+export function usePokemon(pokemonNameOrId, versionGroup = 'sword-shield') {
+  const [result, setResult] = useState({ key: null, data: null, loading: false, error: null });
+  const resultKey = `${pokemonNameOrId || ''}:${versionGroup}`;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -53,18 +53,20 @@ export function usePokemon(pokemonNameOrId) {
     queueMicrotask(() => {
       if (cancelled) return;
 
-      setLoading(true);
-      setError(null);
+      setResult({ key: resultKey, data: null, loading: true, error: null });
 
       fetchPokemonDetails(pokemonNameOrId, controller.signal)
         .then(pokemon => {
-          if (!cancelled) setData(pokemon);
+          const data = {
+            ...pokemon,
+            yields: getEffortYields(pokemon.name, versionGroup, pokemon.yields)
+          };
+          if (!cancelled) setResult({ key: resultKey, data, loading: false, error: null });
         })
-        .catch(err => {
-          if (!cancelled && err.name !== 'AbortError') setError(err.message);
-        })
-        .finally(() => {
-          if (!cancelled) setLoading(false);
+        .catch(error => {
+          if (!cancelled && error.name !== 'AbortError') {
+            setResult({ key: resultKey, data: null, loading: false, error: error.message });
+          }
         });
     });
 
@@ -72,7 +74,12 @@ export function usePokemon(pokemonNameOrId) {
       cancelled = true;
       controller.abort();
     };
-  }, [pokemonNameOrId]);
+  }, [pokemonNameOrId, resultKey, versionGroup]);
 
-  return { data, loading, error };
+  const isCurrentResult = result.key === resultKey;
+  return {
+    data: isCurrentResult ? result.data : null,
+    loading: Boolean(pokemonNameOrId) && (!isCurrentResult || result.loading),
+    error: isCurrentResult ? result.error : null
+  };
 }

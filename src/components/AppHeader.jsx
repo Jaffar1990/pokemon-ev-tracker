@@ -1,7 +1,11 @@
+import { ArrowLeft } from 'lucide-react';
+import pokeballImage from '../assets/pokeball.svg';
 import { getTranslations } from '../i18n/translations';
 import './AppHeader.css';
 
 export function AppHeader({
+  trackingName,
+  onBack,
   team,
   language,
   teamSearchInput,
@@ -24,10 +28,23 @@ export function AppHeader({
 
   return (
     <div className="header-section">
+      <img className="header-pokeball" src={pokeballImage} alt="" aria-hidden="true" />
+      <div className="tracking-toolbar">
+        <button
+          className="tracking-back-button"
+          onClick={onBack}
+          title={t.manager.back}
+          aria-label={t.manager.back}
+        >
+          <ArrowLeft size={17} aria-hidden="true" />
+        </button>
+        <h1 className="tracking-title">{trackingName}</h1>
+      </div>
       <div className="add-team-box">
         <div className="add-team-header">
           <h2 className="add-team-title">
-            {t.header.title} ({team.length}/6)
+            <span className="pokemon-wordmark add-team-brand">{t.header.title}</span>
+            <span className="add-team-count">{team.length}/6</span>
           </h2>
 
         </div>

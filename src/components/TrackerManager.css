@@ -1,0 +1,268 @@
+.manager-root {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  background: var(--page-bg);
+  color: var(--text-primary);
+}
+
+.tracking-manager {
+  width: min(720px, 100%);
+  min-height: calc(100svh - 150px);
+  flex: 1;
+  margin: 0 auto;
+  padding: clamp(38px, 7vh, 76px) 20px 42px;
+  text-align: left;
+}
+
+.manager-heading {
+  position: relative;
+  padding: 0 54px 26px 18px;
+  border-bottom: 1px solid var(--border);
+  border-left: 4px solid var(--pokemon-red);
+}
+
+.manager-pokeball {
+  position: absolute;
+  top: 0;
+  right: 8px;
+  width: 36px;
+  height: 36px;
+  opacity: 0.92;
+  transform: rotate(12deg);
+  filter: drop-shadow(0 2px 2px rgb(37 49 58 / 16%));
+  pointer-events: none;
+}
+
+.manager-kicker {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--pokemon-red);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.manager-brand {
+  font-size: 18px;
+  line-height: 1;
+  text-transform: none;
+}
+
+.manager-heading h1 {
+  margin: 7px 0 6px;
+  color: var(--text-primary);
+  font-size: 36px;
+  letter-spacing: 0;
+  line-height: 1.12;
+}
+
+.manager-heading p {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.tracking-create-form {
+  padding: 24px 0 28px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tracking-create-form label,
+.tracking-list-heading h2 {
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.tracking-create-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 9px;
+}
+
+.tracking-create-row input,
+.tracking-rename-form input {
+  min-width: 0;
+  flex: 1;
+  padding: 11px 12px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--surface);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 14px;
+}
+
+.tracking-create-row input:focus,
+.tracking-rename-form input:focus {
+  outline: 2px solid var(--pokemon-red);
+  outline-offset: 1px;
+}
+
+.tracking-create-row button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 15px;
+  border: 1px solid var(--pokemon-red);
+  border-radius: 5px;
+  background: var(--pokemon-red);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tracking-create-row button:not(:disabled):hover {
+  background: var(--pokemon-red-deep);
+  border-color: var(--pokemon-red-deep);
+}
+
+.tracking-create-row button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tracking-list-section {
+  padding-top: 23px;
+}
+
+.tracking-list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.tracking-list-heading h2 {
+  margin: 0;
+}
+
+.tracking-list-heading > span {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tracking-empty {
+  padding: 20px 14px;
+  border: 1px dashed var(--border);
+  border-radius: 5px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.tracking-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tracking-row {
+  display: flex;
+  align-items: center;
+  min-height: 70px;
+  margin-bottom: 8px;
+  padding: 0 10px 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--surface);
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.tracking-row:hover {
+  border-color: var(--pokemon-blue);
+  box-shadow: 0 2px 8px rgb(32 39 45 / 7%);
+}
+
+.tracking-open {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+  align-self: stretch;
+  padding: 10px 12px 10px 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+}
+
+.tracking-open-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.tracking-open-copy strong {
+  overflow: hidden;
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tracking-open-copy small {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.tracking-row-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.tracking-row-actions button,
+.tracking-rename-form button {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.tracking-row-actions button:hover,
+.tracking-rename-form button:hover {
+  border-color: var(--border);
+  background: var(--surface-muted);
+  color: var(--pokemon-red);
+}
+
+.tracking-rename-form {
+  display: flex;
+  flex: 1;
+  gap: 4px;
+  align-items: center;
+  padding: 8px 8px 8px 0;
+}
+
+.tracking-rename-form input {
+  padding: 8px 10px;
+}
+
+@media (max-width: 600px) {
+  .tracking-manager {
+    min-height: calc(100svh - 210px);
+    padding: 34px 4px 28px;
+  }
+
+  .manager-heading h1 {
+    font-size: 30px;
+  }
+
+  .tracking-create-row button {
+    padding: 0 11px;
+  }
+}

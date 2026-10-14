@@ -1,5 +1,14 @@
 const memoryCache = new Map();
 
+export function parseEffortYields(stats) {
+  return stats
+    .filter(stat => stat.effort > 0)
+    .map(stat => ({
+      stat: stat.stat.name,
+      amount: stat.effort
+    }));
+}
+
 function getCachedPokemon(cacheKey) {
   if (memoryCache.has(cacheKey)) return memoryCache.get(cacheKey);
 
@@ -29,11 +38,12 @@ function buildEvolutionChain(chain) {
 }
 
 export async function fetchPokemonDetails(pokemonNameOrId, signal) {
-  const cacheKey = pokemonNameOrId.toString().toLowerCase().trim();
+  const pokemonKey = pokemonNameOrId.toString().toLowerCase().trim();
+  const cacheKey = pokemonKey;
   const cached = getCachedPokemon(cacheKey);
   if (cached) return cached;
 
-  const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${cacheKey}`, { signal });
+  const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonKey}`, { signal });
   if (!response.ok) throw new Error('Pokemon not found');
 
   const rawData = await response.json();
@@ -50,12 +60,7 @@ export async function fetchPokemonDetails(pokemonNameOrId, signal) {
     name: rawData.name,
     sprite: rawData.sprites.front_default,
     evolutionChain: buildEvolutionChain(evolutionData.chain),
-    yields: rawData.stats
-      .filter(stat => stat.effort > 0)
-      .map(stat => ({
-        stat: stat.stat.name,
-        amount: stat.effort
-      }))
+    yields: parseEffortYields(rawData.stats)
   };
 
   memoryCache.set(cacheKey, parsedData);

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 
-export function useLocalStorage(key, initialValue) {
+export function useLocalStorage(key, initialValue, migrate = value => value) {
   const [value, setValue] = useState(() => {
     try {
       const storedValue = localStorage.getItem(key);
-      if (storedValue !== null) return JSON.parse(storedValue);
+      if (storedValue !== null) return migrate(JSON.parse(storedValue));
     } catch {
       localStorage.removeItem(key);
     }

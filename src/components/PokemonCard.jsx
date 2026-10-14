@@ -1,5 +1,5 @@
 import { memo, useState, useEffect, useRef } from 'react';
-import { calculateTotalEvs, sanitizeManualEvs, EV_LIMITS, POWER_ITEMS, VITAMINS, applyVitamin, BERRIES, applyBerry } from '../utils/evCalculations';
+import { calculateTotalEvs, sanitizeManualEvs, getEvRules, POWER_ITEMS, VITAMINS, FEATHERS, applyVitamin, applyFeather, BERRIES, applyBerry } from '../utils/evCalculations';
 import { getTranslations } from '../i18n/translations';
 import './PokemonCard.css';
 
@@ -9,13 +9,14 @@ export const PokemonCard = memo(function PokemonCard({ pokemon, onUpdate, onDele
   const [isEvolving, setIsEvolving] = useState(false);
   const [toolMode, setToolMode] = useState('vitamin');
 
-  // Cap vitamine: 100 EV per Gen <= 7, nessuno (null) per Gen >= 8
-  const maxVitaminCap = generation <= 7 ? 100 : null;
+  const { maxSingle, maxTotal, maxVitaminCap, hasFeathers, hasPowerItems } = getEvRules(generation);
   const totalEvs = calculateTotalEvs(pokemon.evs);
   const tempTotalEvs = calculateTotalEvs(tempEvs);
   const t = getTranslations(language);
-  const isVitaminMode = toolMode === 'vitamin';
-  const activeTools = isVitaminMode ? VITAMINS : BERRIES;
+  const isVitaminMode = toolMode === 'vitamin' || (toolMode === 'feather' && !hasFeathers);
+  const isFeatherMode = toolMode === 'feather' && hasFeathers;
+  const isBerryMode = toolMode === 'berry';
+  const activeTools = isVitaminMode ? VITAMINS : isFeatherMode ? FEATHERS : BERRIES;
 
   // Trova la posizione attuale nella catena evolutiva
   const chain = pokemon.evolutionChain || [pokemon.name];
@@ -89,18 +90,18 @@ export const PokemonCard = memo(function PokemonCard({ pokemon, onUpdate, onDele
   const handleSaveEdit = () => {
     const enteredValues = Object.values(tempEvs).map(value => Number(value));
     const totalEnteredEvs = enteredValues.reduce((sum, value) => sum + value, 0);
-    const exceedsSingleLimit = enteredValues.some(value => value > EV_LIMITS.MAX_SINGLE);
-    const exceedsTotalLimit = totalEnteredEvs > EV_LIMITS.MAX_TOTAL;
+    const exceedsSingleLimit = enteredValues.some(value => value > maxSingle);
+    const exceedsTotalLimit = totalEnteredEvs > maxTotal;
 
     if (exceedsSingleLimit || exceedsTotalLimit) {
       window.alert(t.card.invalidEvs({
-        maxSingle: EV_LIMITS.MAX_SINGLE,
-        maxTotal: EV_LIMITS.MAX_TOTAL
+        maxSingle,
+        maxTotal
       }));
       return;
     }
 
-    const cleanEvs = sanitizeManualEvs(tempEvs);
+    const cleanEvs = sanitizeManualEvs(tempEvs, generation);
     onUpdate({ ...pokemon, evs: cleanEvs });
     setIsEditing(false);
   };
@@ -113,14 +114,20 @@ export const PokemonCard = memo(function PokemonCard({ pokemon, onUpdate, onDele
   // Usa una Vitamina (+10 EV)
   const handleUseVitamin = (stat) => {
     if (onSaveStateForUndo) onSaveStateForUndo(); // Salva per l'Undo prima di modificare
-    const updatedEvs = applyVitamin(pokemon.evs, stat, maxVitaminCap);
+    const updatedEvs = applyVitamin(pokemon.evs, stat, maxVitaminCap, generation);
     onUpdate({ ...pokemon, evs: updatedEvs });
   };
 
   // Usa una Bacca (-10 EV)
   const handleUseBerry = (stat) => {
     if (onSaveStateForUndo) onSaveStateForUndo(); // Salva per l'Undo prima di modificare
-    const updatedEvs = applyBerry(pokemon.evs, stat);
+    const updatedEvs = applyBerry(pokemon.evs, stat, generation);
+    onUpdate({ ...pokemon, evs: updatedEvs });
+  };
+
+  const handleUseFeather = (stat) => {
+    if (onSaveStateForUndo) onSaveStateForUndo();
+    const updatedEvs = applyFeather(pokemon.evs, stat, generation);
     onUpdate({ ...pokemon, evs: updatedEvs });
   };
 
@@ -155,7 +162,7 @@ export const PokemonCard = memo(function PokemonCard({ pokemon, onUpdate, onDele
             <div>
               <h4 className="pokemon-card-name">{pokemon.name}</h4>
               <span className="pokemon-card-total">
-                {isEditing ? tempTotalEvs : totalEvs}/{EV_LIMITS.MAX_TOTAL} EV
+                {isEditing ? tempTotalEvs : totalEvs}/{maxTotal} EV
               </span>
             </div>
           </div>
@@ -165,8 +172,8 @@ export const PokemonCard = memo(function PokemonCard({ pokemon, onUpdate, onDele
               type="button"
               ref={dragHandleRef}
               className="pokemon-card-drag-handle"
-              title={t.card.drag}
-              aria-label={t.card.drag}
+              title={t.card.drag()}
+              aria-label={t.card.drag()}
               {...dragHandleProps}
               onContextMenu={(event) => event.preventDefault()}
               onTouchStart={(event) => event.preventDefault()}
@@ -210,7 +217,7 @@ export const PokemonCard = memo(function PokemonCard({ pokemon, onUpdate, onDele
               <div key={stat} className="pokemon-card-edit-stat">
                 <span className="pokemon-card-edit-label">{t.stats[stat] || stat}:</span>
                 <input
-                  type="number" min="0" max="252" value={val}
+                  type="number" min="0" max={maxSingle} value={val}
                   onChange={(e) => setTempEvs(prev => ({ ...prev, [stat]: e.target.value }))}
                   className="pokemon-card-edit-input"
                 />
@@ -230,10 +237,20 @@ export const PokemonCard = memo(function PokemonCard({ pokemon, onUpdate, onDele
               >
                 {t.card.vitaminMode()}
               </button>
+              {hasFeathers && (
+                <button
+                  type="button"
+                  className={`pokemon-card-tools-toggle-button ${isFeatherMode ? 'is-active' : ''}`}
+                  aria-pressed={isFeatherMode}
+                  onClick={() => setToolMode('feather')}
+                >
+                  {t.card.featherMode()}
+                </button>
+              )}
               <button
                 type="button"
-                className={`pokemon-card-tools-toggle-button ${!isVitaminMode ? 'is-active is-berry' : ''}`}
-                aria-pressed={!isVitaminMode}
+                className={`pokemon-card-tools-toggle-button ${isBerryMode ? 'is-active is-berry' : ''}`}
+                aria-pressed={isBerryMode}
                 onClick={() => setToolMode('berry')}
               >
                 {t.card.berryMode()}
@@ -245,23 +262,34 @@ export const PokemonCard = memo(function PokemonCard({ pokemon, onUpdate, onDele
             {activeTools.map(tool => {
               const currentStatEvs = pokemon.evs[tool.stat] || 0;
               const isCapReached = isVitaminMode && maxVitaminCap !== null && currentStatEvs >= maxVitaminCap;
-              const isDisabled = isVitaminMode
-                ? isCapReached || currentStatEvs >= EV_LIMITS.MAX_SINGLE || totalEvs >= EV_LIMITS.MAX_TOTAL
+              const isPositiveTool = isVitaminMode || isFeatherMode;
+              const isDisabled = isPositiveTool
+                ? (isVitaminMode && isCapReached) || currentStatEvs >= maxSingle || totalEvs >= maxTotal
                 : currentStatEvs <= 0;
-              const toolName = isVitaminMode ? t.vitamins[tool.stat] : t.berries[tool.stat];
+              const toolName = isVitaminMode
+                ? t.vitamins[tool.stat]
+                : isFeatherMode
+                  ? t.feathers[tool.stat]
+                  : t.berries[tool.stat];
 
               return (
                 <button
                   key={tool.name}
                   type="button"
-                  onClick={() => isVitaminMode ? handleUseVitamin(tool.stat) : handleUseBerry(tool.stat)}
+                  onClick={() => isVitaminMode
+                    ? handleUseVitamin(tool.stat)
+                    : isFeatherMode
+                      ? handleUseFeather(tool.stat)
+                      : handleUseBerry(tool.stat)}
                   disabled={isDisabled}
-                  className={`pokemon-card-item-button ${isVitaminMode ? 'pokemon-card-vitamin-button' : 'pokemon-card-berry-button'} ${isDisabled ? 'is-disabled' : ''}`}
+                  className={`pokemon-card-item-button ${isPositiveTool ? 'pokemon-card-vitamin-button' : 'pokemon-card-berry-button'} ${isDisabled ? 'is-disabled' : ''}`}
                   title={isCapReached
                     ? t.card.vitaminLimitTitle({ generation })
                     : isVitaminMode
                       ? t.card.useVitaminTitle({ name: toolName, stat: t.stats[tool.stat] })
-                      : t.card.useBerryTitle({ name: toolName, stat: t.stats[tool.stat] })}
+                      : isFeatherMode
+                        ? t.card.useFeatherTitle({ name: toolName, stat: t.stats[tool.stat] })
+                        : t.card.useBerryTitle({ name: toolName, stat: t.stats[tool.stat] })}
                 >
                   {t.stats[tool.stat]}
                 </button>
@@ -281,15 +309,17 @@ export const PokemonCard = memo(function PokemonCard({ pokemon, onUpdate, onDele
             </label>
           </div>
 
-          <select
-            value={pokemon.powerItemKey || 'none'}
-            onChange={(e) => onUpdate({ ...pokemon, powerItemKey: e.target.value })}
-            className="pokemon-card-power-select"
-          >
-            {Object.entries(POWER_ITEMS).map(([key]) => (
-              <option key={key} value={key}>{key === 'none' ? t.card.nonePowerItem() : t.powerItems[key]}</option>
-            ))}
-          </select>
+          {hasPowerItems && (
+            <select
+              value={pokemon.powerItemKey || 'none'}
+              onChange={(e) => onUpdate({ ...pokemon, powerItemKey: e.target.value })}
+              className="pokemon-card-power-select"
+            >
+              {Object.entries(POWER_ITEMS).map(([key]) => (
+                <option key={key} value={key}>{key === 'none' ? t.card.nonePowerItem() : t.powerItems[key]}</option>
+              ))}
+            </select>
+          )}
 
           {!isEditing ? (
             <button className="pokemon-card-edit-button" title={t.card.edit()} onClick={() => { setTempEvs({...pokemon.evs}); setIsEditing(true); }}>✏️</button>
